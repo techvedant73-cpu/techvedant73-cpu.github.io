@@ -672,7 +672,12 @@ let lifeStats  = S.get('se2_life')  || { totalScore:0, totalTasksCompleted:0, to
 let calYear, calMonth, selectedDate = null;
 let chartT = null, chartS = null;
 
-function toISO(d) { return d.toISOString().split('T')[0]; }
+function toISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function today()  { return toISO(new Date()); }
 function monthName(y,m) { return new Date(y,m,1).toLocaleString('en',{month:'long'}) + ' ' + y; }
 function getTasksForDate(iso) { return tasks.filter(t => t.date === iso); }
