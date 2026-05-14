@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #ffffff;
+  --bg-sub:   #f9f9f8;
+  --bg-hover: #f4f4f3;
+  --border:   #e5e5e3;
+  --border-md:#d4d4d2;
+  --text:     #1a1a18;
+  --text-2:   #6b6b68;
+  --text-3:   #a3a3a0;
+  --blue:     #2563eb;
+  --blue-bg:  #eff6ff;
+  --green:    #16a34a;
+  --green-bg: #f0fdf4;
+  --amber:    #d97706;
+  --amber-bg: #fffbeb;
+  --red:      #dc2626;
+  --red-bg:   #fef2f2;
+  --radius:   8px;
+  --radius-lg:12px;
+  --shadow:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:       #111110;
+    --bg-sub:   #1a1a19;
+    --bg-hover: #222221;
+    --border:   #2a2a28;
+    --border-md:#3a3a38;
+    --text:     #ededeb;
+    --text-2:   #8c8c89;
+    --text-3:   #55554f;
+    --blue:     #60a5fa;
+    --blue-bg:  #1e2d4a;
+    --green:    #4ade80;
+    --green-bg: #14261e;
+    --amber:    #fbbf24;
+    --amber-bg: #2d2210;
+    --red:      #f87171;
+    --red-bg:   #2d1515;
+    --shadow:   0 1px 3px rgba(0,0,0,0.3);
+  }
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ── */
+#shell { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-sub);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.sidebar-logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-mark {
+  width: 24px; height: 24px;
+  background: var(--text);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-mark svg { width: 14px; height: 14px; fill: var(--bg); }
+.logo-text { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+
+.sidebar-nav { padding: 8px; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: background 0.1s, color 0.1s;
+  margin-bottom: 1px;
+  user-select: none;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active { background: var(--bg); color: var(--text); box-shadow: var(--shadow); border: 1px solid var(--border); }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.sidebar-footer { padding: 12px 8px; border-top: 1px solid var(--border); }
+.btn-ghost {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--red); }
+.btn-ghost svg { width: 14px; height: 14px; }
+
+/* ── MAIN ── */
+#main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+.page { display: none; flex: 1; }
+.page.active { display: block; }
+
+.page-header {
+  padding: 24px 28px 0;
+  margin-bottom: 24px;
+}
+.page-title { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 2px; }
+.page-sub { font-size: 13px; color: var(--text-2); }
+.page-body { padding: 0 28px 32px; }
+
+/* ── ONBOARDING ── */
+#page-onboard {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+#page-onboard.active { display: flex; }
+.onboard-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow);
+}
+.onboard-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; }
+.onboard-h { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+.onboard-p { font-size: 13px; color: var(--text-2); margin-bottom: 28px; line-height: 1.5; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+.field input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+.btn-primary {
+  width: 100%;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* ── STAT CARDS ── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.stat-label { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 8px; }
+.stat-value { font-size: 26px; font-weight: 600; letter-spacing: -0.03em; color: var(--text); line-height: 1; }
+.stat-value.blue   { color: var(--blue); }
+.stat-value.green  { color: var(--green); }
+.stat-value.red    { color: var(--red); }
+.stat-value.amber  { color: var(--amber); }
+.stat-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+/* ── STATUS BADGE ── */
+.status-bar {
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.s-secured    { background: var(--green-bg); color: var(--green); }
+.s-secured .status-dot    { background: var(--green); }
+.s-compromised { background: var(--amber-bg); color: var(--amber); }
+.s-compromised .status-dot { background: var(--amber); }
+.s-failed  { background: var(--red-bg); color: var(--red); }
+.s-failed .status-dot  { background: var(--red); }
+.s-none    { background: var(--bg-sub); color: var(--text-2); border: 1px solid var(--border); }
+.s-none .status-dot    { background: var(--text-3); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap { margin-bottom: 20px; }
+.progress-label { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.progress-bg { height: 6px; background: var(--bg-hover); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 6px; background: var(--blue); border-radius: 99px; transition: width 0.3s; }
+
+/* ── SECTION CARD ── */
+.section-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.section-card-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.section-card-body { padding: 16px; }
+
+/* ── GOAL BANNER ── */
+.goal-banner {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.goal-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.goal-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.days-chip {
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.days-chip span { font-weight: 400; color: var(--text-2); font-size: 12px; }
+
+/* ── LIFETIME GRID ── */
+.lifetime-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.life-cell { padding: 14px; background: var(--bg-sub); border-radius: var(--radius); }
+.life-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+.life-value { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+.life-value.green { color: var(--green); }
+.life-value.red   { color: var(--red); }
+.life-value.blue  { color: var(--blue); }
+
+/* ── RANK BADGE ── */
+.rank-pill {
+  display: inline-flex; align-items: center;
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── CALENDAR ── */
+.cal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.cal-title { font-size: 15px; font-weight: 600; flex: 1; color: var(--text); letter-spacing: -0.01em; }
+.cal-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.cal-btn:hover { background: var(--bg-hover); color: var(--text); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.cal-day-hdr { background: var(--bg-sub); padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.cal-cell {
+  background: var(--bg);
+  min-height: 88px;
+  padding: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+}
+.cal-cell:hover { background: var(--bg-hover); }
+.cal-cell.today { background: var(--blue-bg); }
+.cal-cell.other-month { background: var(--bg-sub); pointer-events: none; }
+.cal-date { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
+.cal-cell.today .cal-date { color: var(--blue); font-weight: 600; }
+.task-pill {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-weight: 500;
+}
+.tp-done    { background: var(--green-bg); color: var(--green); }
+.tp-pending { background: var(--bg-sub); color: var(--text-2); }
+.tp-missed  { background: var(--red-bg); color: var(--red); }
+.cal-status-dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; border-radius: 50%; }
+
+/* ── TASK PANEL OVERLAY ── */
+#overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 50; }
+#overlay.open { display: block; }
+#task-panel {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: 320px;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+}
+#task-panel.open { transform: translateX(0); }
+.tp-hdr {
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.tp-date-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.tp-date-sub   { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+.tp-close {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 14px;
+  width: 26px; height: 26px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.tp-close:hover { color: var(--text); }
+.tp-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.task-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.task-row:last-child { border-bottom: none; }
+.task-cb { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; cursor: pointer; accent-color: var(--blue); }
+.task-name { flex: 1; font-size: 13px; color: var(--text); }
+.task-name.done { color: var(--text-3); text-decoration: line-through; }
+.task-del-btn {
+  background: none; border: none;
+  color: var(--text-3); cursor: pointer;
+  font-size: 16px; padding: 2px 4px;
+  border-radius: 4px;
+}
+.task-del-btn:hover { background: var(--red-bg); color: var(--red); }
+.tp-empty { font-size: 13px; color: var(--text-3); padding: 12px 0; }
+.tp-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+.tp-input-row { display: flex; gap: 8px; }
+.tp-input {
+  flex: 1;
+  background: var(--bg-sub);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+}
+.tp-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+.tp-add-btn {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tp-add-btn:hover { opacity: 0.85; }
+
+/* ── ANALYTICS ── */
+.analytics-section { margin-bottom: 24px; }
+.section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+.heatmap-wrap { display: flex; flex-wrap: wrap; gap: 3px; }
+.h-cell { width: 14px; height: 14px; border-radius: 3px; }
+.h-secured    { background: var(--green); opacity: 0.85; }
+.h-compromised{ background: var(--amber); opacity: 0.85; }
+.h-failed     { background: var(--red); opacity: 0.6; }
+.h-empty      { background: var(--bg-hover); }
+.chart-wrap {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  position: relative;
+  height: 200px;
+}
+.legend-row { display: flex; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); font-weight: 500; }
+.leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- ONBOARD (shown when no goal) -->
+<div id="page-onboard" class="page">
+  <div class="onboard-card">
+    <div class="onboard-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14"><path d="M7 1L9.5 5.5H12L8.5 8.5L10 13L7 10.5L4 13L5.5 8.5L2 5.5H4.5L7 1Z"/></svg>
+      </div>
+      <span style="font-size:15px;font-weight:600;letter-spacing:-0.01em;">Study Engine</span>
+    </div>
+    <div class="onboard-h">Set your objective</div>
+    <div class="onboard-p">Define what you're working toward and when you need to get there. Everything else builds from this.</div>
+    <div class="field">
+      <label>Objective</label>
+      <input type="text" id="ob-goal" placeholder="e.g. JEE Advanced 2027" maxlength="60" onkeydown="if(event.key==='Enter')document.getElementById('ob-deadline').focus()">
+    </div>
+    <div class="field" style="margin-bottom:24px;">
+      <label>Deadline</label>
+      <input type="date" id="ob-deadline" onkeydown="if(event.key==='Enter')completeOnboard()">
+    </div>
+    <button class="btn-primary" onclick="completeOnboard()">Get started</button>
+  </div>
+</div>
+
+<!-- MAIN SHELL (hidden until goal set) -->
+<div id="shell" style="display:none;">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14"><path d="M7 1L9.5 5.5H12L8.5 8.5L10 13L7 10.5L4 13L5.5 8.5L2 5.5H4.5L7 1Z"/></svg>
+      </div>
+      <span class="logo-text">Study Engine</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+        Overview
+      </div>
+      <div class="nav-item" id="nav-calendar" onclick="showPage('calendar')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2.5" width="14" height="12" rx="2"/><path d="M5 1v3M11 1v3M1 6.5h14"/></svg>
+        Calendar
+      </div>
+      <div class="nav-item" id="nav-analytics" onclick="showPage('analytics')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12l4-4 3 3 4-5 3 2"/></svg>
+        Analytics
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-ghost" onclick="exportBackup()" style="color:var(--text-2);">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 11v1.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V11"/></svg>
+        Export backup
+      </button>
+      <label class="btn-ghost" style="color:var(--text-2);cursor:pointer;" title="Import a backup JSON file">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V2M5 5l3-3 3 3"/><path d="M2 11v1.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V11"/></svg>
+        Import backup
+        <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
+      </label>
+      <button class="btn-ghost" onclick="resetSystem()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 1 0 1.5-3.9"/><path d="M2 4v4h4"/></svg>
+        Reset system
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Overview</div>
+        <div class="page-sub" id="d-date-display"></div>
+      </div>
+      <div class="page-body">
+        <div class="goal-banner">
+          <div>
+            <div class="goal-name" id="d-goal-name">—</div>
+            <div class="goal-meta" id="d-deadline">—</div>
+          </div>
+          <div class="days-chip"><span id="d-days">0</span> <span>days left</span></div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Tasks planned today</div>
+            <div class="stat-value" id="d-planned">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value blue" id="d-completed">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Today's score</div>
+            <div class="stat-value" id="d-score">0</div>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Daily progress</span>
+            <span id="d-pct">0%</span>
+          </div>
+          <div class="progress-bg"><div class="progress-fill" id="d-progress" style="width:0%"></div></div>
+        </div>
+
+        <div id="d-status" class="status-bar s-none"><div class="status-dot"></div><span>No activity recorded today.</span></div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Lifetime stats</div>
+            <div class="rank-pill" id="d-rank">Candidate</div>
+          </div>
+          <div class="section-card-body">
+            <div class="lifetime-grid">
+              <div class="life-cell"><div class="life-label">Total score</div><div class="life-value blue" id="d-total-score">0</div></div>
+              <div class="life-cell"><div class="life-label">Days secured</div><div class="life-value green" id="d-secured">0</div></div>
+              <div class="life-cell"><div class="life-label">Days failed</div><div class="life-value red" id="d-failed">0</div></div>
+              <div class="life-cell"><div class="life-label">Tasks done</div><div class="life-value" id="d-t-done">0</div></div>
+              <div class="life-cell"><div class="life-label">Tasks missed</div><div class="life-value red" id="d-t-missed">0</div></div>
+              <div class="life-cell"><div class="life-label">Completion rate</div><div class="life-value" id="d-rate">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="page" id="page-calendar">
+      <div class="page-header">
+        <div class="page-title">Calendar</div>
+        <div class="page-sub">Click any date to add or review tasks.</div>
+      </div>
+      <div class="page-body">
+        <div class="cal-header">
+          <button class="cal-btn" onclick="changeMonth(-1)">&#8592;</button>
+          <div class="cal-title" id="cal-month-label"></div>
+          <button class="cal-btn" onclick="changeMonth(1)">&#8594;</button>
+        </div>
+        <div class="legend-row" style="margin-bottom:12px;">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green);"></div>Secured</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--amber);"></div>Compromised</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--red);opacity:0.7;"></div>Failed</div>
+        </div>
+        <div class="cal-grid" id="cal-grid">
+          <div class="cal-day-hdr">Mon</div>
+          <div class="cal-day-hdr">Tue</div>
+          <div class="cal-day-hdr">Wed</div>
+          <div class="cal-day-hdr">Thu</div>
+          <div class="cal-day-hdr">Fri</div>
+          <div class="cal-day-hdr">Sat</div>
+          <div class="cal-day-hdr">Sun</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div class="page-title">Analytics</div>
+        <div class="page-sub">Your execution history over time.</div>
+      </div>
+      <div class="page-body">
+        <div class="analytics-section">
+          <div class="section-title">Execution heatmap — last 182 days</div>
+          <div class="legend-row" style="margin-bottom:10px;">
+            <div class="leg-item"><div class="leg-dot h-secured"></div>Secured</div>
+            <div class="leg-item"><div class="leg-dot h-compromised"></div>Compromised</div>
+            <div class="leg-item"><div class="leg-dot h-failed"></div>Failed</div>
+            <div class="leg-item"><div class="leg-dot h-empty"></div>No tasks</div>
+          </div>
+          <div class="heatmap-wrap" id="heatmap-container"></div>
+        </div>
+        <div class="analytics-section">
+          <div class="section-title">Tasks completed — last 30 days</div>
+          <div class="chart-wrap">
+            <canvas id="chart-tasks" role="img" aria-label="Line chart of tasks completed per day over the last 30 days">Daily task completion over 30 days.</canvas>
+          </div>
+        </div>
+        <div class="analytics-section">
+          <div class="section-title">Cumulative score — last 30 days</div>
+          <div class="chart-wrap">
+            <canvas id="chart-score" role="img" aria-label="Line chart of cumulative score over the last 30 days">Cumulative score over 30 days.</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK PANEL -->
+<div id="overlay" onclick="closeTaskPanel()"></div>
+<div id="task-panel">
+  <div class="tp-hdr">
+    <div>
+      <div class="tp-date-label" id="tp-date-label">—</div>
+      <div class="tp-date-sub" id="tp-date-sub">—</div>
+    </div>
+    <button class="tp-close" onclick="closeTaskPanel()">&#10005;</button>
+  </div>
+  <div class="tp-body" id="task-list"></div>
+  <div class="tp-footer">
+    <div class="tp-input-row">
+      <input type="text" class="tp-input" id="new-task-input" placeholder="Add a task..." maxlength="80" onkeydown="if(event.key==='Enter')addTask()">
+      <button class="tp-add-btn" onclick="addTask()">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const S = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: k => localStorage.removeItem(k),
+};
+
+let goalData   = S.get('se2_goal');
+let tasks      = S.get('se2_tasks')  || [];
+let dailyStats = S.get('se2_daily') || [];
+let lifeStats  = S.get('se2_life')  || { totalScore:0, totalTasksCompleted:0, totalTasksMissed:0, totalDaysSecured:0, totalDaysFailed:0 };
+
+let calYear, calMonth, selectedDate = null;
+let chartT = null, chartS = null;
+
+function toISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function today()  { return toISO(new Date()); }
+function monthName(y,m) { return new Date(y,m,1).toLocaleString('en',{month:'long'}) + ' ' + y; }
+function getTasksForDate(iso) { return tasks.filter(t => t.date === iso); }
+function saveTasks() { S.set('se2_tasks', tasks); }
+function saveDaily() { S.set('se2_daily', dailyStats); }
+function saveLife()  { S.set('se2_life', lifeStats); }
+
+function getDayStatus(iso) {
+  const t = getTasksForDate(iso);
+  if (!t.length) return 'none';
+  const done = t.filter(x => x.completed).length;
+  if (done === t.length) return 'secured';
+  if (done > 0) return 'compromised';
+  return 'failed';
+}
+function getRank(s) {
+  if (s >= 2500) return 'Architect';
+  if (s >= 1000) return 'Commander';
+  if (s >= 400)  return 'Strategist';
+  if (s >= 150)  return 'Specialist';
+  if (s >= 50)   return 'Operative';
+  return 'Candidate';
+}
+
+function runRollover() {
+  const processed = new Set(dailyStats.map(d => d.date));
+  const todayISO  = today();
+  [...new Set(tasks.map(t => t.date))].filter(d => d < todayISO && !processed.has(d)).forEach(finalizeDay);
+}
+function finalizeDay(iso) {
+  if (dailyStats.find(d => d.date === iso)) return;
+  const t = getTasksForDate(iso);
+  if (!t.length) return;
+  const done = t.filter(x => x.completed).length;
+  const missed = t.length - done;
+  const status = done === t.length ? 'secured' : done > 0 ? 'compromised' : 'failed';
+  dailyStats.push({ date: iso, totalTasks: t.length, completedTasks: done, status });
+  saveDaily();
+  lifeStats.totalScore += (done * 2) - (missed * 1);
+  lifeStats.totalTasksCompleted += done;
+  lifeStats.totalTasksMissed    += missed;
+  if (status === 'secured')  lifeStats.totalDaysSecured++;
+  else if (status === 'failed') lifeStats.totalDaysFailed++;
+  saveLife();
+}
+
+function completeOnboard() {
+  const name = document.getElementById('ob-goal').value.trim();
+  const dl   = document.getElementById('ob-deadline').value;
+  if (!name || !dl) { alert('Please fill in both fields.'); return; }
+  goalData = { goalName: name, deadline: dl };
+  S.set('se2_goal', goalData);
+  init();
+}
+function resetSystem() {
+  if (!confirm('Reset all data? This cannot be undone.')) return;
+  ['se2_goal','se2_tasks','se2_daily','se2_life'].forEach(k => S.del(k));
+  goalData = null; tasks = []; dailyStats = [];
+  lifeStats = { totalScore:0, totalTasksCompleted:0, totalTasksMissed:0, totalDaysSecured:0, totalDaysFailed:0 };
+  init();
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const nb = document.getElementById('nav-'+name);
+  if (nb) nb.classList.add('active');
+  closeTaskPanel();
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'calendar')  renderCalendar();
+  if (name === 'analytics') renderAnalytics();
+}
+
+function updateDashboard() {
+  if (!goalData) return;
+  const now = new Date();
+  document.getElementById('d-date-display').textContent =
+    now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('d-goal-name').textContent = goalData.goalName;
+  const dl = new Date(goalData.deadline + 'T00:00:00');
+  document.getElementById('d-deadline').textContent =
+    'Deadline: ' + dl.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+  const diff = Math.max(0, Math.ceil((dl - now) / 86400000));
+  document.getElementById('d-days').textContent = diff;
+
+  const tt = getTasksForDate(today());
+  const planned   = tt.length;
+  const completed = tt.filter(t => t.completed).length;
+  const missed    = planned - completed;
+  const pct       = planned > 0 ? Math.round((completed/planned)*100) : 0;
+
+  document.getElementById('d-planned').textContent   = planned;
+  document.getElementById('d-completed').textContent = completed;
+  document.getElementById('d-score').textContent     = (completed * 2) - (missed * 1);
+  document.getElementById('d-progress').style.width  = pct + '%';
+  document.getElementById('d-pct').textContent       = pct + '%';
+
+  const status = getDayStatus(today());
+  const el = document.getElementById('d-status');
+  const msgMap = { secured:'Day secured.', compromised:'Execution compromised — some tasks pending.', failed:'Day failed — no tasks completed.', none:'No activity recorded today.' };
+  const clsMap = { secured:'s-secured', compromised:'s-compromised', failed:'s-failed', none:'s-none' };
+  el.className = 'status-bar ' + (clsMap[status] || 's-none');
+  el.innerHTML = '<div class="status-dot"></div><span>' + (msgMap[status] || msgMap.none) + '</span>';
+
+  const total = lifeStats.totalTasksCompleted + lifeStats.totalTasksMissed;
+  const rate  = total > 0 ? Math.round((lifeStats.totalTasksCompleted / total) * 100) + '%' : '—';
+  document.getElementById('d-total-score').textContent = lifeStats.totalScore;
+  document.getElementById('d-rank').textContent        = getRank(lifeStats.totalScore);
+  document.getElementById('d-secured').textContent     = lifeStats.totalDaysSecured;
+  document.getElementById('d-failed').textContent      = lifeStats.totalDaysFailed;
+  document.getElementById('d-t-done').textContent      = lifeStats.totalTasksCompleted;
+  document.getElementById('d-t-missed').textContent    = lifeStats.totalTasksMissed;
+  document.getElementById('d-rate').textContent        = rate;
+}
+
+function changeMonth(d) {
+  calMonth += d;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCalendar();
+}
+function renderCalendar() {
+  document.getElementById('cal-month-label').textContent = monthName(calYear, calMonth);
+  const grid = document.getElementById('cal-grid');
+  while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const prevDays    = new Date(calYear, calMonth, 0).getDate();
+
+  for (let i = 0; i < startOffset; i++)
+    grid.appendChild(makeCalCell(calYear, calMonth-1, prevDays-startOffset+i+1, true));
+  for (let d = 1; d <= daysInMonth; d++)
+    grid.appendChild(makeCalCell(calYear, calMonth, d, false));
+  const trailing = (7 - ((startOffset + daysInMonth) % 7)) % 7;
+  for (let d = 1; d <= trailing; d++)
+    grid.appendChild(makeCalCell(calYear, calMonth+1, d, true));
+}
+function makeCalCell(y, m, d, otherMonth) {
+  const dt  = new Date(y, m, d);
+  const iso = toISO(dt);
+  const todayISO = today();
+  const isPast   = iso < todayISO;
+
+  const cell = document.createElement('div');
+  cell.className = 'cal-cell' + (otherMonth ? ' other-month' : '') + (iso === todayISO ? ' today' : '');
+  if (otherMonth) return cell;
+
+  const num = document.createElement('div');
+  num.className = 'cal-date';
+  num.textContent = d;
+  cell.appendChild(num);
+
+  const t = getTasksForDate(iso);
+  t.slice(0,3).forEach(task => {
+    const pill = document.createElement('div');
+    pill.className = 'task-pill ' + (task.completed ? 'tp-done' : isPast ? 'tp-missed' : 'tp-pending');
+    pill.textContent = task.title;
+    cell.appendChild(pill);
+  });
+  if (t.length > 3) {
+    const more = document.createElement('div');
+    more.style.cssText = 'font-size:10px;color:var(--text-3);margin-top:2px;padding-left:2px;';
+    more.textContent = '+' + (t.length - 3) + ' more';
+    cell.appendChild(more);
+  }
+  if (isPast && t.length > 0) {
+    const s = getDayStatus(iso);
+    const dot = document.createElement('div');
+    dot.className = 'cal-status-dot';
+    dot.style.background = s==='secured' ? 'var(--green)' : s==='compromised' ? 'var(--amber)' : 'var(--red)';
+    cell.appendChild(dot);
+  }
+  cell.onclick = () => openTaskPanel(iso);
+  return cell;
+}
+
+function openTaskPanel(iso) {
+  selectedDate = iso;
+  const d = new Date(iso + 'T12:00:00');
+  document.getElementById('tp-date-label').textContent =
+    d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('tp-date-sub').textContent = iso;
+  document.getElementById('task-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  renderTaskList();
+  setTimeout(() => document.getElementById('new-task-input').focus(), 200);
+}
+function closeTaskPanel() {
+  document.getElementById('task-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  selectedDate = null;
+  if (document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
+  updateDashboard();
+}
+function renderTaskList() {
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+  const t = getTasksForDate(selectedDate);
+  const isPast = selectedDate < today();
+  if (!t.length) {
+    list.innerHTML = '<div class="tp-empty">No tasks scheduled for this day.</div>';
+    return;
+  }
+  t.forEach(task => {
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.className = 'task-cb';
+    cb.checked = task.completed; cb.disabled = isPast;
+    cb.onchange = () => { task.completed = cb.checked; saveTasks(); renderTaskList(); updateDashboard(); };
+    const name = document.createElement('div');
+    name.className = 'task-name' + (task.completed ? ' done' : '');
+    name.textContent = task.title;
+    const del = document.createElement('button');
+    del.className = 'task-del-btn'; del.textContent = '×'; del.disabled = isPast;
+    del.onclick = () => { tasks = tasks.filter(x => x.id !== task.id); saveTasks(); renderTaskList(); };
+    row.appendChild(cb); row.appendChild(name); row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+function addTask() {
+  const inp = document.getElementById('new-task-input');
+  const title = inp.value.trim();
+  if (!title || !selectedDate) return;
+  tasks.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2), title, date: selectedDate, completed: false, createdAt: Date.now() });
+  saveTasks(); inp.value = '';
+  renderTaskList(); updateDashboard();
+}
+
+function renderAnalytics() {
+  renderHeatmap(); renderCharts();
+}
+function renderHeatmap() {
+  const c = document.getElementById('heatmap-container');
+  c.innerHTML = '';
+  for (let i = 181; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const iso = toISO(d);
+    const cell = document.createElement('div');
+    cell.className = 'h-cell';
+    const t = getTasksForDate(iso);
+    if (!t.length) cell.classList.add('h-empty');
+    else {
+      const s = getDayStatus(iso);
+      cell.classList.add(s==='secured' ? 'h-secured' : s==='compromised' ? 'h-compromised' : 'h-failed');
+    }
+    cell.title = iso;
+    c.appendChild(cell);
+  }
+}
+function renderCharts() {
+  const last30 = [];
+  for (let i=29; i>=0; i--) { const d=new Date(); d.setDate(d.getDate()-i); last30.push(toISO(d)); }
+  const labels   = last30.map(iso => { const d=new Date(iso+'T12:00:00'); return d.getDate()+'/'+(d.getMonth()+1); });
+  const taskData = last30.map(iso => getTasksForDate(iso).filter(t=>t.completed).length);
+  let cum = 0;
+  const scoreData = last30.map(iso => {
+    const t = getTasksForDate(iso);
+    cum += (t.filter(x=>x.completed).length*2) - (t.filter(x=>!x.completed).length*1);
+    return cum;
+  });
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+  const tickColor = isDark ? '#55554f' : '#a3a3a0';
+  const blue  = isDark ? '#60a5fa' : '#2563eb';
+  const green = isDark ? '#4ade80' : '#16a34a';
+
+  if (chartT) { chartT.destroy(); chartT = null; }
+  if (chartS) { chartS.destroy(); chartS = null; }
+
+  const commonOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid:{color:gridColor}, ticks:{color:tickColor, font:{family:'Inter,-apple-system,sans-serif', size:10}, maxTicksLimit:8} },
+      y: { grid:{color:gridColor}, ticks:{color:tickColor, font:{family:'Inter,-apple-system,sans-serif', size:10}}, beginAtZero:true }
+    }
+  };
+
+  chartT = new Chart(document.getElementById('chart-tasks'), {
+    type:'line',
+    data:{ labels, datasets:[{ data:taskData, borderColor:blue, borderWidth:2, pointRadius:3, pointBackgroundColor:blue, fill:true, backgroundColor: isDark ? 'rgba(96,165,250,0.08)' : 'rgba(37,99,235,0.06)', tension:0.3 }] },
+    options: commonOpts
+  });
+  chartS = new Chart(document.getElementById('chart-score'), {
+    type:'line',
+    data:{ labels, datasets:[{ data:scoreData, borderColor:green, borderWidth:2, pointRadius:3, pointBackgroundColor:green, fill:true, backgroundColor: isDark ? 'rgba(74,222,128,0.06)' : 'rgba(22,163,74,0.06)', tension:0.3 }] },
+    options: commonOpts
+  });
+}
+
+function exportBackup() {
+  const backup = {
+    version: 'se2_backup_v1',
+    exportedAt: new Date().toISOString(),
+    se2_goal:  S.get('se2_goal'),
+    se2_tasks: S.get('se2_tasks')  || [],
+    se2_daily: S.get('se2_daily') || [],
+    se2_life:  S.get('se2_life')  || {}
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = 'study-engine-backup-' + date + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.version !== 'se2_backup_v1') {
+        alert('Invalid backup file. Make sure you are using a Study Engine backup.');
+        return;
+      }
+      if (!confirm('This will overwrite all current data with the backup. Continue?')) return;
+      if (data.se2_goal)  S.set('se2_goal',  data.se2_goal);
+      if (data.se2_tasks) S.set('se2_tasks', data.se2_tasks);
+      if (data.se2_daily) S.set('se2_daily', data.se2_daily);
+      if (data.se2_life)  S.set('se2_life',  data.se2_life);
+      goalData   = data.se2_goal;
+      tasks      = data.se2_tasks  || [];
+      dailyStats = data.se2_daily || [];
+      lifeStats  = data.se2_life  || { totalScore:0, totalTasksCompleted:0, totalTasksMissed:0, totalDaysSecured:0, totalDaysFailed:0 };
+      alert('Backup restored successfully!');
+      init();
+    } catch(err) {
+      alert('Failed to read backup file. Make sure it is a valid JSON backup.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function init() {
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+
+  if (!goalData) {
+    document.getElementById('shell').style.display = 'none';
+    document.getElementById('page-onboard').classList.add('active');
+    return;
+  }
+  document.getElementById('page-onboard').classList.remove('active');
+  document.getElementById('shell').style.display = 'flex';
+  runRollover();
+  showPage('dashboard');
+}
+
+init();
+</script>
+</body>
+</html>
